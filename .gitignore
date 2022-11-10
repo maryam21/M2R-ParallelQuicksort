@@ -35,3 +35,4 @@ journal.tex
 *.x86_64
 *.hex
 src/parallelQuicksort
+.Rproj.user
