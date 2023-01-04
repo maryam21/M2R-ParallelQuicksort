@@ -62,23 +62,59 @@ dplyr::glimpse(new_df)
 ```
 
 ```{r}
-ggplot() +               
-  geom_point(data = new_df, aes(x=Size, y=Time, color = Type))
+install.packages("tidyverse")
+```
+```{r}
+
 ```
 
-```{r}
-ggplot() +               
-  geom_line(data = new_df, aes(x=Size, y=Time, color = Type))
-```
+
 ```{r}
 library(DoE.wrapper)
+```
+
+
+```{r}
 d5_maximin <- lhs.design( type= "maximin" , nruns= 100 ,nfactors= 2 ,
-digits= NULL , seed= 27041 , factor.names=list( A=c(10,100),B=c(0,1) ) )
+digits= c(0,1) , seed= 27041 , factor.names=list( A=c(10,100),B=c(0,1) ) )
 plot(d5_maximin , select = c( "A","B" ), main="LHS design")
 ```
 
 
 ```{r}
-seq(1,10,2)
+lhs_design <- lhs.design( type= "maximin" , nruns= 1000 ,nfactors= 2 ,
+digits=0 , seed= 40 , factor.names=list( size=c(100,1000000),type=c(0,2) ) )
+#plot(d5_maximin , select = c( "Size","Type" ), main="LHS design")
+ggplot() +               
+  geom_point(data = lhs_design, aes(x=size, y=type, color = size))
 ```
+```{r}
+lhs_design %>% group_by(type) %>% count()
+```
+
+
+```{r}
+factorial_design <- fac.design(nfactors= 2 , replications = 5, repeat.only=TRUE, blocks = 1, randomize = TRUE, seed= 27041 , factor.names=list( size=seq(100,1000000,), type=seq(0,2) ) )
+plot(d5_maximin , select = c( "Size","Type" ), main="LHS design")
+```
+
+
+```{r}
+d5_maximin
+```
+```{r}
+
+```
+
+
+
+```{r}
+d5_maximin <- lhs.design( type= "maximin" , nruns= 100 ,nfactors= 2 ,
+digits= c(10,0) , seed= 27041 , factor.names=list( A=c(10,100),B=c(0,1) ) )
+plot(d5_maximin , select = c( "A","B" ), main="LHS design")
+```
+```{r}
+d5_maximin
+```
+
 
