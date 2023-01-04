@@ -22,72 +22,24 @@ You need to use the _tidyverse_ for this analysis. Unzip the file _dpt2020_txt.z
 
 ```{r}
 library(tidyverse)
-
 ```
-
-
-## Download Raw Data from the website
-```{r}
-df <- read.csv("data/sama_2014-10-13/measurements_03:47.csv",header=T)
-plot(df$Size,df$Time,col=c("red","blue","green")) #[df$Type]
-```
-```{r}
-df
-```
-
-
-```{r}
-new_df <- read.csv("data/debian_2022-11-10/measurements_15_21.csv",header=T)
-plot(new_df$Size,new_df$Time,col=c("red","blue","green"))
-
-```
-
-
-```{r}
-new_df
-```
-```{r}
-ggplot() +               
-  geom_point(data = df, aes(x=Size, y=Time, color = Type))
-```
-```{r}
-ggplot() +               
-  geom_line(data = df, aes(x=Size, y=Time, color = Type))
-```
-
-
-```{r}
-dplyr::glimpse(new_df)
-
-```
-
-```{r}
-install.packages("tidyverse")
-```
-```{r}
-
-```
-
 
 ```{r}
 library(DoE.wrapper)
 ```
 
-
-```{r}
-d5_maximin <- lhs.design( type= "maximin" , nruns= 100 ,nfactors= 2 ,
-digits= c(0,1) , seed= 27041 , factor.names=list( A=c(10,100),B=c(0,1) ) )
-plot(d5_maximin , select = c( "A","B" ), main="LHS design")
-```
-
-
 ```{r}
 lhs_design <- lhs.design( type= "maximin" , nruns= 1000 ,nfactors= 2 ,
-digits=0 , seed= 40 , factor.names=list( size=c(100,1000000),type=c(0,2) ) )
+digits=0 , seed= 401868 , factor.names=list( size=c(100,1000000),type=c(0,2) ) )
 #plot(d5_maximin , select = c( "Size","Type" ), main="LHS design")
 ggplot() +               
   geom_point(data = lhs_design, aes(x=size, y=type, color = size))
 ```
+```{r}
+lhs_design
+```
+
+
 ```{r}
 lhs_design %>% group_by(type) %>% count()
 ```
