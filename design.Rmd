@@ -27,22 +27,61 @@ library(tidyverse)
 ```{r}
 library(DoE.wrapper)
 ```
-
 ```{r}
-lhs_design <- lhs.design( type= "maximin" , nruns= 1000 ,nfactors= 2 ,
-digits=0 , seed= 401868 , factor.names=list( size=c(100,1000000),type=c(0,2) ) )
-#plot(d5_maximin , select = c( "Size","Type" ), main="LHS design")
+d5_maximin <- lhs.design( type= "maximin" , nruns= 100 ,nfactors= 2 ,
+digits= NULL , seed= 27041 , factor.names=list( size=c(10,100),type=c(0,1) ) )
+
+d5_maximin$order =  as.numeric(rownames(d5_maximin))
+
 ggplot() +               
-  geom_point(data = lhs_design, aes(x=size, y=type, color = size))
+  geom_point(data = d5_maximin, aes(x=size, y=type, color = order))
 ```
 ```{r}
+random <- lhs.design( type= "improved" , nruns= 100 ,nfactors= 2 ,
+digits= NULL , seed= 27041 , factor.names=list( size=c(10,100),type=c(0,1) ) )
+
+random$order =  as.numeric(rownames(random))
+
+ggplot() +               
+  geom_point(data = random, aes(x=size, y=type, color = order))
+```
+
+
+```{r}
+lhs_design <- lhs.design( type= "maximin" , nruns= 2000, nfactors= 2 , randomize = TRUE,
+digits=0 , seed= 401868 , factor.names=list( size=c(100,1000000),type=c(0,2) ) )
+```
+
+```{r}
+lhs_design$order =  as.numeric(rownames(lhs_design))
 lhs_design
+```
+```{r}
+ggplot() +               
+  geom_point(data = lhs_design, aes(x=size, y=type, color = order))
 ```
 
 
 ```{r}
 lhs_design %>% group_by(type) %>% count()
 ```
+```{r}
+lhs_design$type[lhs_design$type == 1] <- "Parallel"
+lhs_design$type[lhs_design$type == 0] <- "Sequential"
+lhs_design$type[lhs_design$type == 2] <- "Built-in"
+lhs_design
+```
+
+```{r}
+lhs_design
+```
+
+
+```{r}
+write.csv(lhs_design,"~/workspace/M2R-ParallelQuicksort/data/experiments/lhs_design.csv", row.names = FALSE)
+```
+
+
 
 
 ```{r}
