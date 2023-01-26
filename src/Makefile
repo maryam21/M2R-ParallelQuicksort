@@ -1,4 +1,5 @@
 parallelQuicksort: parallelQuicksort.o
+originalParallelQuicksort: originalParallelQuicksort.o
 
 PEDANTIC_PARANOID_FREAK =       -g -Wall -Wshadow -Wcast-align \
 				-Waggregate-return -Wmissing-prototypes -Wmissing-declarations \
@@ -20,3 +21,5 @@ LIBS =
 
 clean:
 	rm -f parallelQuicksort *.o *~
+	rm -f originalParallelQuicksort *.o *~
+
