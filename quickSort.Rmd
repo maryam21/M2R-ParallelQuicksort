@@ -118,6 +118,16 @@ local_df <- local_df %>% mutate_if(is.character, str_trim)
 dplyr::glimpse(local_df)
 local_df
 ```
+Data from mandelbrot
+
+```{r}
+mandelbrot_df <- read.csv("data/im2ag-mandelbrot_2023-01-26/measurements_16:54.csv",header=T)
+mandelbrot_df <- mandelbrot_df %>% mutate_if(is.character, str_trim)
+dplyr::glimpse(mandelbrot_df)
+mandelbrot_df
+```
+
+
 
 
 ```{r}
