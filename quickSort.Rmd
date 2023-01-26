@@ -35,7 +35,7 @@ df <- read.csv("data/sama_2014-10-13/measurements_03:47.csv",header=T)
 df
 dplyr::glimpse(df)
 ```
-We notice in the Type column that there empty spaces in the values so we need to fix this:
+We notice in the Type column that there are empty spaces in the values so we need to fix this by trimming all strings in the dataset:
 
 ```{r}
 df <- df %>% mutate_if(is.character, str_trim)
@@ -78,7 +78,14 @@ dfNum=df[, c(1,6,7,8)]
 mat.cor=cor(dfNum)
 corrplot(mat.cor, type="upper")
 ```
-If we include all three new variables in our model we will get an error since the three are perfectly collinear, so we will omit one of them which will be a reference level for the other variiables we keep
+If we include all three new variables in our model we will get an error since the three are perfectly collinear, so we will omit one of them which will be a reference level for the other variiables we keep. This means that the mean of Parallel and 
+
+```{r}
+reg3 = lm(Time~Type_F+Size, data=df)
+summary(reg3)
+anova(reg3)
+```
+Using a factor field will give us the same results as when we use dummy variables, however I prefer to use dummy variables since they are more easy to reason with
 
 ```{r}
 reg1 = lm(Time~Size+Parallel+Sequential, data=df)
@@ -89,14 +96,27 @@ From the coefficients T values, we can see that the type feature is not consider
 
 ```{r}
 reg0 = lm(Time ~ 1, data = df)
-step(reg0, scope=Time~Size+Parallel+Sequential, direction="forward")
+step(reg0, scope=Time~Size+Parallel+Sequential+Built_In, direction="forward")
 ```
+Similarly to the previous result the model with just the Size feature is considered the best one.
+
+```{r}
+par(mfcol=c(2,2))
+plot(reg1)
+plot(reg1,4)
+```
+Although the first model has a good R square, we can see from the above plots that it's not a good model, in the cook's distance for example we have many outliers, and we can see from the Residuals vs Fitted plot that the biggest outliers happen when we have big values of Time which happens when we have a big size and that's when we have a significant difference in execution times between the different types of quicksort.
+
 
 # Using New generated data
 
+To improve the model we will need to have more data, so we start by doing the tests on two different machines, my machine and mandelbrot
+
 ```{r}
-new_df <- read.csv("data/debian_2022-11-10/measurements_15_21.csv",header=T)
-new_df
+local_df <- read.csv("data/debian_2022-11-10/measurements_15_21.csv",header=T)
+local_df <- local_df %>% mutate_if(is.character, str_trim)
+dplyr::glimpse(local_df)
+local_df
 ```
 
 
