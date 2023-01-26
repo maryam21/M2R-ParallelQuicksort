@@ -243,9 +243,32 @@ par(mfcol=c(2,2))
 plot(reg_merged)
 plot(reg_merged, 4)
 ```
-We see can from the cook's distance plot that there are a lot of outliers in the data which will result in a higher variability in the data which makes it harder to fit a good model. We can also see from the residuals plot that the higher the execution time the higher the error which mostly happens when we have bigger sizes and this is were there are big differences between results depending on the type of the algorithm.
+We see can from the cook's distance plot that there are a lot of outliers in the data which will result in a higher variance which makes it harder to fit a good model. We can also see from the residuals plot that the higher the execution time the higher the error which mostly happens when we have bigger sizes and this is were there are big differences between results depending on the type of the algorithm.
 
-We can improve this model by removing the outliers, however this is not the best solution as the experiment has a lot of flaws in first place such as having a big gap between the sizes tested and the number of tests is still small, as well as the fact that the experiments order between the different algorithms is always the same. That's why we will design a new experiment.
+
+```{r}
+size_pred <- seq(100,1000000,by=5000)
+type_pred <- rep(c(1), length(size_pred))
+
+par_time_pred <- reg_merged$coefficients[1]+reg_merged$coefficients[2]*size_pred+reg_merged$coefficients[3]
+seq_time_pred <- reg_merged$coefficients[1]+reg_merged$coefficients[2]*size_pred+reg_merged$coefficients[4]
+builtin_time_pred <- reg_merged$coefficients[1]+reg_merged$coefficients[2]*size_pred
+
+par_fct_reg <- data.frame(size_pred=size_pred, time_pred=par_time_pred)
+seq_fct_reg <- data.frame(size_pred=size_pred, type_pred=type_pred, time_pred=seq_time_pred)
+builtin_fct_reg <- data.frame(size_pred=size_pred, type_pred=type_pred, time_pred=builtin_time_pred)
+
+ggplot()+
+geom_point(data=merged_df,aes(x=Size,y=Time, color = Type))+ geom_line(data=par_fct_reg,aes(x=size_pred,y=time_pred),col="green")+
+geom_line(data=seq_fct_reg,aes(x=size_pred,y=time_pred),col="blue")+
+geom_line(data=builtin_fct_reg,aes(x=size_pred,y=time_pred),col="red")+
+stat_smooth(method="lm",se=FALSE)+
+xlab("Size")+
+ylab("Time")
+```
+From the above plot we can see that the model predicts higher execution times even for higher sizes for the parallel quick sort algorithm which contradicts the result of the original experiment in which the parallel had lower execution times for higher size values.
+
+The model however does not really fit well the data for the parallel data points. We can improve this model by removing the outliers, however this is not the best solution as the experiment has a lot of flaws in the first place such as having a big gap between the sizes tested and the number of tests is still small, as well as the fact that the experiments order between the different algorithms is always the same. That's why we will design a new experiment.
 
 
 ## Using new experiment results 
