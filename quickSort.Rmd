@@ -190,8 +190,7 @@ reg_mandelbrot = lm(Time~Size+Type_F, data=mandelbrot_df)
 summary(reg_mandelbrot)
 anova(reg_mandelbrot)
 ```
-
-We can conclude from this that the machine in which we run the experiments actually impacts the results a lot, so we will now merge the data from both machines to reduce the impact of the machine on the results
+Here too the model took just the parallel type and size features as most important but the coefficients we have for the features are quite different so we can say that the machine in which we run the experiments impacts the results, so we will now merge the data from both machines to reduce the impact of the machine on the results
 
 ```{r}
 merged_df = union(local_df, mandelbrot_df)
@@ -216,11 +215,39 @@ We can see here that we still have a lot of outliers.
 reg_test_merged = lm(Time ~ 1, data = merged_df)
 step(reg_test_merged, scope=Time~Size+Type_F, direction="forward")
 ```
-This is much better than the result of the original 
+Here too the model takes into account the types and the size which is good and gives the highest coefficient to the parallel type which matches with the data in which the parallel algorithm has very different execution times compared to sequential and built-in types.
 
 ```{r}
 reg_merged = lm(Time~Size+Type_F, data=merged_df)
 summary(reg_merged)
 anova(reg_merged)
 ```
+The R squared is good but is less than the previous models' which is probably due to the merged data having higher variability so more unexplained parts by the model.
+
+```{r}
+pred = predict(reg_merged, data.frame(Size=300000, Type_F="Parallel"),interval="prediction")
+pred
+```
+```{r}
+merged_confidence = 0.1752284+0.0302271
+merged_confidence
+```
+```{r}
+confidence_interval
+```
+Although we used more data to fit this model we still got a higher confidence interval than the model fitted with the original dataset which could be explained by the high variability of the data we have now.
+
+
+```{r}
+par(mfcol=c(2,2))
+plot(reg_merged)
+plot(reg_merged, 4)
+```
+We see can from the cook's distance plot that there are a lot of outliers in the data which will result in a higher variability in the data which makes it harder to fit a good model. We can also see from the residuals plot that the higher the execution time the higher the error which mostly happens when we have bigger sizes and this is were there are big differences between results depending on the type of the algorithm.
+
+We can improve this model by removing the outliers, however this is not the best solution as the experiment has a lot of flaws in first place such as having a big gap between the sizes tested and the number of tests is still small, as well as the fact that the experiments order between the different algorithms is always the same. That's why we will design a new experiment.
+
+
+## Using new experiment results 
+
 
