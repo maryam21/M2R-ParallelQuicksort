@@ -1,7 +1,7 @@
 ---
-title: "French given names per year per department"
-author: "Lucas Mello Schnorr, Jean-Marc Vincent"
-date: "October, 2022"
+title: "Quick sort analysis"
+author: "Mariam Ahhttouche"
+date: "January, 2023"
 output:
   html_document:
     df_print: paged
@@ -22,63 +22,87 @@ You need to use the _tidyverse_ for this analysis. Unzip the file _dpt2020_txt.z
 
 ```{r}
 library(tidyverse)
-
+library(corrplot)
 ```
 
 
 ## Download Raw Data from the website
 ```{r}
 df <- read.csv("data/sama_2014-10-13/measurements_03:47.csv",header=T)
-plot(df$Size,df$Time,col=c("red","blue","green")) #[df$Type]
 ```
+
 ```{r}
 df
+dplyr::glimpse(df)
 ```
-
+We notice in the Type column that there empty spaces in the values so we need to fix this:
 
 ```{r}
-new_df <- read.csv("data/debian_2022-11-10/measurements_15_21.csv",header=T)
-plot(new_df$Size,new_df$Time,col=c("red","blue","green"))
-
+df <- df %>% mutate_if(is.character, str_trim)
+dplyr::glimpse(df)
 ```
 
 
-```{r}
-new_df
-```
-```{r}
-ggplot() +               
-  geom_point(data = df, aes(x=Size, y=Time, color = Type))
-```
 ```{r}
 ggplot() +               
   geom_line(data = df, aes(x=Size, y=Time, color = Type))
 ```
+We can see better the scaling of each type as we increase the size, however the measurements have very big intervals between them so the lines might not really match with the reality.
+
+We plot the confidence intervals for Size and Type features:
+
+```{r}
+df$Size_F = as.factor(df$Size)
+df$Type_F = as.factor(df$Type)
+```
 
 
 ```{r}
-dplyr::glimpse(new_df)
-
+with(df, plot(Time~Size_F))
+with(df, plot(Time~Type_F))
 ```
+From these confidence intervals we can not compare the different sizes since there confidence interval are interleaving. We can also see that we have a lot of outliers in Time/Type plot.
+
+
+We want to see how big is the impact of the type of the quicksort run and the size of the problem, so we will feed these two variables into a linear regression model. To do that we first add new variables into the dataset that represent the three different categories of the Type column, since Type is a categorical variable.
 
 ```{r}
-ggplot() +               
-  geom_point(data = new_df, aes(x=Size, y=Time, color = Type))
+# Create dummy variable
+df$Parallel <- ifelse(df$Type == "Parallel", 1, 0)
+df$Sequential <- ifelse(df$Type == "Sequential", 1, 0)
+df$Built_In <- ifelse(df$Type == "Built-in", 1, 0)
+df
 ```
+```{r}
+dfNum=df[, c(1,6,7,8)]
+mat.cor=cor(dfNum)
+corrplot(mat.cor, type="upper")
+```
+If we include all three new variables in our model we will get an error since the three are perfectly collinear, so we will omit one of them which will be a reference level for the other variiables we keep
+
+```{r}
+reg1 = lm(Time~Size+Parallel+Sequential, data=df)
+summary(reg1)
+anova(reg1)
+```
+From the coefficients T values, we can see that the type feature is not considered as important by the model which is wrong, and this is probably due to the fact that we do not have enough data to infer relationship between time and type.
+
+```{r}
+reg0 = lm(Time ~ 1, data = df)
+step(reg0, scope=Time~Size+Parallel+Sequential, direction="forward")
+```
+
+# Using New generated data
+
+```{r}
+new_df <- read.csv("data/debian_2022-11-10/measurements_15_21.csv",header=T)
+new_df
+```
+
 
 ```{r}
 ggplot() +               
   geom_line(data = new_df, aes(x=Size, y=Time, color = Type))
 ```
-```{r}
-library(DoE.wrapper)
-d5_maximin <- lhs.design( type= "maximin" , nruns= 100 ,nfactors= 2 ,
-digits= NULL , seed= 27041 , factor.names=list( A=c(10,100),B=c(0,1) ) )
-plot(d5_maximin , select = c( "A","B" ), main="LHS design")
-```
 
-
-```{r}
-seq(1,10,2)
-```
 
