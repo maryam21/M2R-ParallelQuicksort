@@ -21,6 +21,7 @@ library(DoE.wrapper)
 
 
 ## Download Raw Data from the website
+
 ```{r}
 df <- read.csv("data/sama_2014-10-13/measurements_03:47.csv",header=T)
 ```
@@ -29,6 +30,7 @@ df <- read.csv("data/sama_2014-10-13/measurements_03:47.csv",header=T)
 df
 dplyr::glimpse(df)
 ```
+
 We notice in the Type column that there are empty spaces in the values so we need to fix this by trimming all strings in the dataset:
 
 ```{r}
@@ -36,11 +38,11 @@ df <- df %>% mutate_if(is.character, str_trim)
 dplyr::glimpse(df)
 ```
 
-
 ```{r}
 ggplot() +               
   geom_line(data = df, aes(x=Size, y=Time, color = Type))
 ```
+
 We can see better the scaling of each type as we increase the size, however the measurements have very big intervals between them so the lines might not really match with the reality.
 
 We plot the confidence intervals for Size and Type features:
@@ -55,8 +57,8 @@ df$Type_F = as.factor(df$Type)
 with(df, plot(Time~Size_F))
 with(df, plot(Time~Type_F))
 ```
-From these confidence intervals we can not compare the different sizes since there confidence interval are interleaving. We can also see that we have a lot of outliers in Time/Type plot.
 
+From these confidence intervals we can not compare the different sizes since there confidence interval are interleaving. We can also see that we have a lot of outliers in Time/Type plot.
 
 We want to see how big is the impact of the type of the quicksort run and the size of the problem, so we will feed these two variables into a linear regression model. To do that we first add new variables into the dataset that represent the three different categories of the Type column, since Type is a categorical variable.
 
@@ -72,6 +74,7 @@ dfNum=df[, c(1,6,7,8)]
 mat.cor=cor(dfNum)
 corrplot(mat.cor, type="upper")
 ```
+
 If we include all three new variables in our model we will get an error since the three are perfectly collinear, so we will omit one of them which will be a reference level for the other variiables we keep. This means that the mean of Parallel and 
 
 ```{r}
@@ -79,6 +82,7 @@ reg3 = lm(Time~Type_F+Size, data=df)
 summary(reg3)
 anova(reg3)
 ```
+
 Using a factor field will give us the same results as when we use dummy variables, however I prefer to use dummy variables since they are more easy to reason with
 
 ```{r}
@@ -86,12 +90,14 @@ reg1 = lm(Time~Size+Parallel+Sequential, data=df)
 summary(reg1)
 anova(reg1)
 ```
+
 From the coefficients T values, we can see that the type feature is not considered as important by the model which is wrong, and this is probably due to the fact that we do not have enough data to infer relationship between time and type.
 
 ```{r}
 reg0 = lm(Time ~ 1, data = df)
 step(reg0, scope=Time~Size+Parallel+Sequential+Built_In, direction="forward")
 ```
+
 Similarly to the previous result the model with just the Size feature is considered the best one.
 
 ```{r}
@@ -103,17 +109,16 @@ pred
 confidence_interval = 0.04194724+0.0314921
 confidence_interval
 ```
-
-
 ```{r}
 par(mfcol=c(2,2))
 plot(reg1)
 plot(reg1,4)
 ```
+
 Although the first model has a good R square, we can see from the above plots that it's not a good model, in the cook's distance for example we have many outliers, and we can see from the Residuals vs Fitted plot that the biggest outliers happen when we have big values of Time which happens when we have a big size and that's when we have a significant difference in execution times between the different types of quicksort.
 
 
-# Using New generated data
+## Using New generated data
 
 To improve the model we will need to have more data, so we start by doing the tests on two different machines, my machine and mandelbrot.
 I start by testing on my local machine and I do three different measurements at different times to reduce the impact of the time at which we run the experiment 
@@ -139,12 +144,14 @@ local_df$Type_F = as.factor(local_df$Type)
 with(local_df, plot(Time~Size_F))
 with(local_df, plot(Time~Type_F))
 ```
+
 The result here is pretty similar to the results of the original experiment except we know have smaller confidence intervals since we added more experiments, however we can see that we still have a lot of outliers.
 
 ```{r}
 reg_test_local = lm(Time ~ 1, data = local_df)
 step(reg_test_local, scope=Time~Size+Type_F, direction="forward")
 ```
+
 The resulting model is much better here since it takes into account the type of the algorithm, and it gives the sequential type a much higher coefficient than the parallel one, which matches the result when we have a size of 1000000 but for smaller size the execution time is higher for parallel than sequential or Built-in.
 
 ```{r}
@@ -152,6 +159,7 @@ reg_local = lm(Time~Size+Type_F, data=local_df)
 summary(reg_local)
 anova(reg_local)
 ```
+
 Here we see that the model rejects the sequential and built-in types (value for this one is included in the intercept), which is probably due to the fact that these two types have pretty close execution times in different sizes.  
 
 We do the same thing but this time on mandelbrot:
@@ -172,6 +180,7 @@ mandelbrot_df$Type_F = as.factor(mandelbrot_df$Type)
 ggplot() +               
   geom_line(data = mandelbrot_df, aes(x=Size, y=Time, color = Type))
 ```
+
 We can see from this plot that the parallel performs way worse than in the other machines which is weird since this machine has more cores than the previous machines and we also made measurements at three different times to reduce impact of the time of experiment in which we could have the machine under heavy load. 
 
 ```{r}
@@ -184,6 +193,7 @@ reg_mandelbrot = lm(Time~Size+Type_F, data=mandelbrot_df)
 summary(reg_mandelbrot)
 anova(reg_mandelbrot)
 ```
+
 Here too the model took just the parallel type and size features as most important but the coefficients we have for the features are quite different so we can say that the machine in which we run the experiments impacts the results, so we will now merge the data from both machines to reduce the impact of the machine on the results
 
 ```{r}
@@ -196,19 +206,21 @@ merged_df
 ggplot() +               
   geom_line(data = merged_df, aes(x=Size, y=Time, color = Type))
 ```
-We can see that the parallel execution has a lot of variability due to the big difference between the two machines when it comes to the parallel execution of the algorithm.
 
+We can see that the parallel execution has a lot of variability due to the big difference between the two machines when it comes to the parallel execution of the algorithm.
 
 ```{r}
 with(local_df, plot(Time~Size_F))
 with(local_df, plot(Time~Type_F))
 ```
+
 We can see here that we still have a lot of outliers.
 
 ```{r}
 reg_test_merged = lm(Time ~ 1, data = merged_df)
 step(reg_test_merged, scope=Time~Size+Type_F, direction="forward")
 ```
+
 Here too the model takes into account the types and the size which is good and gives the highest coefficient to the parallel type which matches with the data in which the parallel algorithm has very different execution times compared to sequential and built-in types.
 
 ```{r}
@@ -216,6 +228,7 @@ reg_merged = lm(Time~Size+Type_F, data=merged_df)
 summary(reg_merged)
 anova(reg_merged)
 ```
+
 The R squared is good but is less than the previous models' which is probably due to the merged data having higher variability so more unexplained parts by the model.
 
 ```{r}
@@ -229,6 +242,7 @@ merged_confidence
 ```{r}
 confidence_interval
 ```
+
 Although we used more data to fit this model we still got a higher confidence interval than the model fitted with the original dataset which could be explained by the high variability of the data we have now.
 
 
@@ -237,6 +251,7 @@ par(mfcol=c(2,2))
 plot(reg_merged)
 plot(reg_merged, 4)
 ```
+
 We see can from the cook's distance plot that there are a lot of outliers in the data which will result in a higher variance which makes it harder to fit a good model. We can also see from the residuals plot that the higher the execution time the higher the error which mostly happens when we have bigger sizes and this is were there are big differences between results depending on the type of the algorithm.
 
 ```{r}
@@ -259,12 +274,13 @@ stat_smooth(method="lm",se=FALSE)+
 xlab("Size")+
 ylab("Time")
 ```
+
 From the above plot we can see that the model predicts higher execution times even for higher sizes for the parallel quick sort algorithm which contradicts the result of the original experiment in which the parallel had lower execution times for higher size values.
 
 The model however does not really fit well the data for the parallel data points. We can improve this model by removing the outliers, however this is not the best solution as the experiment has a lot of flaws in the first place such as having a big gap between the sizes tested and the number of tests is still small, as well as the fact that the experiments order between the different algorithms is always the same. That's why we will design a new experiment.
 
 
-## Using new experiment results 
+## Using new designed experiment results 
 
 Here I design a new experiment that addresses the flaws of the previous experiment. The improvements of this new experiment are:
 
@@ -297,6 +313,7 @@ experiment$order =  as.numeric(rownames(experiment))
 ggplot() +               
   geom_point(data = experiment, aes(x=Size, y=order, color = Type))
 ```
+
 We can see that the Size space is well covered and randomized, and the order between the tests order is also well randomized.
 
 
