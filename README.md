@@ -7,4 +7,4 @@ improve their experimental methodology.
 The [journal](journal.org) contains all information and experimental reports.
 
 # Homework
-[notebook](https://github.com/maryam21/M2R-ParallelQuicksort/blob/master/quickSort.Rmd) , [html](https://github.com/maryam21/M2R-ParallelQuicksort/blob/master/quickSort.html)
+[notebook](analysis/quickSort.Rmd) , [html](analysis/quickSort.html), [updated code](src/parallelQuicksort.c), [experiment generation script](scripts/gen_experiments.R), [script for running experiment](scripts/run_experiment.sh)
