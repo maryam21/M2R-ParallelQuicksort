@@ -118,7 +118,7 @@ plot(reg1,4)
 Although the first model has a good R square, we can see from the above plots that it's not a good model, in the cook's distance for example we have many outliers, and we can see from the Residuals vs Fitted plot that the biggest outliers happen when we have big values of Time which happens when we have a big size and that's when we have a significant difference in execution times between the different types of quicksort.
 
 
-## Using New generated data
+## Using new generated data
 
 To improve the model we will need to have more data, so we start by doing the tests on two different machines, my machine and mandelbrot.
 I start by testing on my local machine and I do three different measurements at different times to reduce the impact of the time at which we run the experiment 
@@ -296,6 +296,7 @@ To do that we will use an lhs design to generate different sizes between 100 and
 experiment <- read.csv(file="data/experiments/qs_experiment.csv")
 ```
 
+
 Check that we have same number of experiments for each type
 
 ```{r}
@@ -308,6 +309,7 @@ experiment$Type[experiment$Type == 2] <- "Built-in"
 ```{r}
 experiment %>% group_by(Type) %>% count()
 ```
+
 
 To see this randomization better we do this plot:
 
@@ -327,10 +329,12 @@ I found that having 1000 for each type gives the best coverage of the size space
 
 ## New experiment analysis
 
-Let's analyse the new experiment results:
+To run the generated experiments I use the script `scripts/run_experiments.sh` that puts the results of the experiments in a csv file.
+
+So let's analyse the results in this file:
 
 ```{r}
-experiment_results <- read.csv(file="data/debian_2023-02-03/measurements_16:10.csv")
+experiment_results <- read.csv(file="data/debian_2023-02-03/measurements_16:24.csv")
 experiment_results
 ```
 
@@ -353,6 +357,7 @@ local_results
 ggplot() +               
   geom_line(data = local_results, aes(x=Size, y=Time, color = Type))
 ```
+
 We can see that we have less fluctuations than the previous graph, to improve this we should increase the time interval between generated measurements.
 
 ```{r}
