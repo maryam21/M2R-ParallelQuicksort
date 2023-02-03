@@ -325,4 +325,141 @@ We can see that the Size space is better covered and randomized, and the order b
 I found that having 1000 for each type gives the best coverage of the size space, however when I run these experiments they take so long on my machine that's why I did this compromise of minimizing the number of experiments so that I can have the results within reasonable time.
 
 
+## New experiment analysis
+
+Let's analyse the new experiment results:
+
+```{r}
+experiment_results <- read.csv(file="data/debian_2023-02-03/measurements_16:10.csv")
+experiment_results
+```
+
+```{r}
+ggplot() +               
+  geom_line(data = experiment_results, aes(x=Size, y=Time, color = Type))
+```
+
+This result is much better as we can see there's much less interpolation of the measurements and so more accurate evolutions of the measurements, as we can see there some outliers in which the time measurement is very high which could be due to a huge load on the machine at that time.
+
+So to mitigate this, like we did in the previous experiment we will use measurements from different times:
+
+```{r}
+local_results <- list.files(path = "./data/debian_2023-02-03/", pattern = "*.csv", full.names = T) %>% map_df(~read_csv(.)) 
+dplyr::glimpse(local_results)
+local_results
+```
+
+```{r}
+ggplot() +               
+  geom_line(data = local_results, aes(x=Size, y=Time, color = Type))
+```
+We can see that we have less fluctuations than the previous graph, to improve this we should increase the time interval between generated measurements.
+
+```{r}
+local_results$Type_F = as.factor(local_results$Type)
+with(local_results, plot(Time~Type_F))
+```
+
+We can see that we have big confidence intervals, and that's expected as the execution time for each algorithm changes with the size.
+
+
+```{r}
+mandelbrot_results <- list.files(path = "./data/im2ag-mandelbrot_2023-02-03/", pattern = "*.csv", full.names = T) %>% map_df(~read_csv(.)) 
+dplyr::glimpse(mandelbrot_results)
+mandelbrot_results
+```
+
+```{r}
+ggplot() +               
+  geom_line(data = mandelbrot_results, aes(x=Size, y=Time, color = Type))
+```
+```{r}
+mandelbrot_results$Type_F = as.factor(mandelbrot_results$Type)
+with(mandelbrot_results, plot(Time~Type_F))
+```
+
+Here again we have big execution times for the parallel algorithm in this machine, ideally we should check this in another machine since we have a big difference between the parallel execution time between the two machines, but for now I will continue the analysis we these results since for now I do not have acces to another machine.
+
+```{r}
+merged_results = union(local_results, mandelbrot_results)
+dplyr::glimpse(merged_results)
+merged_results
+```
+
+```{r}
+ggplot() +               
+  geom_line(data = merged_results, aes(x=Size, y=Time, color = Type))
+```
+
+As expected the big difference in parallel execution times between the machines results in having a lot of flectuations in the parallel algorithm graph, which will make it more difficult for the model to fit values for the parallel type.
+
+Let's try to fit a model with this data:
+
+```{r}
+reg_test_results = lm(Time ~ 1, data = merged_results)
+step(reg_test_results, scope=Time~Size+Type_F, direction="forward")
+```
+
+So the best model is the one that has both type and size in it, which is right.
+
+```{r}
+reg_results = lm(Time~Size+Type_F, data=merged_results)
+summary(reg_results)
+anova(reg_results)
+```
+
+The R squared is worse than the one from previous experiment, this could probably be due to having more data in this experiment. The residual standard error is still small which is good, and the F statistic is higher as now the model gives more importance to the sequential type feature as opposed to the previous model, however the intercept is not considered important and this could be due to the fact that the execution times of both the sequential and built-in are very similar so the model can explain the variability of the built-in type with the sequential type.
+
+```{r}
+pred = predict(reg_results, data.frame(Size=300000, Type_F="Parallel"),interval="prediction")
+pred
+```
+
+```{r}
+results_confidence = 0.3082128-0.07831349
+results_confidence
+```
+
+```{r}
+merged_confidence
+```
+
+Although we used more data to fit this model we still got similar confidence interval than the previous model which could be explained by a high variability of this data.
+
+
+```{r}
+par(mfcol=c(2,2))
+plot(reg_results)
+plot(reg_results, 4)
+```
+
+The Residuals vs fitted plots are much better than the ones in the previous model as we can see we the residuals do not have a particular structure and they are evenly distributed over the x-axis, the cook's distance plot is also better as most points are clustered in one region except some few outliers that are far. However the Normal Q-Q plot is worse as a lot of residuals are not normally distributed.
+
+
+```{r}
+size_pred <- seq(100,1000000,by=5000)
+type_pred <- rep(c(1), length(size_pred))
+
+par_time_pred <- reg_merged$coefficients[1]+reg_results$coefficients[2]*size_pred+reg_results$coefficients[3]
+seq_time_pred <- reg_merged$coefficients[1]+reg_results$coefficients[2]*size_pred+reg_results$coefficients[4]
+builtin_time_pred <- reg_merged$coefficients[1]+reg_results$coefficients[2]*size_pred
+
+par_fct_reg <- data.frame(size_pred=size_pred, time_pred=par_time_pred)
+seq_fct_reg <- data.frame(size_pred=size_pred, type_pred=type_pred, time_pred=seq_time_pred)
+builtin_fct_reg <- data.frame(size_pred=size_pred, type_pred=type_pred, time_pred=builtin_time_pred)
+
+ggplot()+
+geom_point(data=merged_results,aes(x=Size,y=Time, color = Type))+ geom_line(data=par_fct_reg,aes(x=size_pred,y=time_pred),col="green")+
+geom_line(data=seq_fct_reg,aes(x=size_pred,y=time_pred),col="blue")+
+geom_line(data=builtin_fct_reg,aes(x=size_pred,y=time_pred),col="red")+
+stat_smooth(method="lm",se=FALSE)+
+xlab("Size")+
+ylab("Time")
+```
+
+We can see that the model does fit well the sequential and built-in types, however for the parallel type the fit is bad which gives higher errors in the parallel type which explains why the residuals are not normally distributed since the residuals of parallel type will be so different from those of the other types so they are the outliers that causes the residuals to not be normally distributed.
+
+To fix this we should run our experiment on some other machines and compare with the results of the machines we used here to see which one is the outlier to discard.
+
+
 
