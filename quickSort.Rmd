@@ -294,10 +294,16 @@ To do that we will use an lhs design to generate different sizes between 100 and
 
 ```{r}
 experiment <- read.csv(file="data/experiments/qs_experiment.csv")
-experiment
 ```
 
 Check that we have same number of experiments for each type
+
+```{r}
+experiment$Type[experiment$Type == 1] <- "Parallel"
+experiment$Type[experiment$Type == 0] <- "Sequential"
+experiment$Type[experiment$Type == 2] <- "Built-in"
+```
+
 
 ```{r}
 experiment %>% group_by(Type) %>% count()
@@ -314,7 +320,9 @@ ggplot() +
   geom_point(data = experiment, aes(x=Size, y=order, color = Type))
 ```
 
-We can see that the Size space is well covered and randomized, and the order between the tests order is also well randomized.
+We can see that the Size space is better covered and randomized, and the order between the tests order is also well randomized.
+
+I found that having 1000 for each type gives the best coverage of the size space, however when I run these experiments they take so long on my machine that's why I did this compromise of minimizing the number of experiments so that I can have the results within reasonable time.
 
 
 

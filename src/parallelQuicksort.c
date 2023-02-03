@@ -92,7 +92,7 @@ int main(int argc, char *argv[])
       //Compute time difference.
       diff = ((end.tv_sec * 1000000 + end.tv_usec)
               - (start.tv_sec * 1000000 + start.tv_usec)) / 1000000.0;
-      printf("Sequential quicksort took: %lf sec.\n", diff);
+      printf("%d,%d,%lf\n", NUM,TYPE,diff);
 
   }else if(TYPE==1){
     //Now, parallel quicksort.
@@ -110,8 +110,8 @@ int main(int argc, char *argv[])
     //Compute time difference.
     diff = ((end.tv_sec * 1000000 + end.tv_usec)
             - (start.tv_sec * 1000000 + start.tv_usec)) / 1000000.0;
-    printf("Parallel quicksort took: %lf sec.\n", diff);
-    
+    printf("%d,%d,%lf\n", NUM,TYPE,diff);
+
   }else if(TYPE==2){
     //Finally, built-in for reference:
     memcpy(lyst, lystbck, NUM * sizeof(double));
@@ -125,7 +125,7 @@ int main(int argc, char *argv[])
     //Compute time difference.
     diff = ((end.tv_sec * 1000000 + end.tv_usec)
             - (start.tv_sec * 1000000 + start.tv_usec)) / 1000000.0;
-    printf("Built-in quicksort took: %lf sec.\n", diff);
+    printf("%d,%d,%lf\n", NUM,TYPE,diff);
   }
 
   free(lyst);
