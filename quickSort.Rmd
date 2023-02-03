@@ -11,18 +11,12 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-# The problem context
-The aim of the activity is to develop a methodology to answer a specific question on a given dataset. 
 
-The dataset is the set of Firstname given in France on a large period of time. 
-[https://www.insee.fr/fr/statistiques/2540004](https://www.insee.fr/fr/statistiques/fichier/2540004/dpt2021_csv.zip), we choose this dataset because it is sufficiently large, you can't do the analysis by hand, the structure is simple
-
-
-You need to use the _tidyverse_ for this analysis. Unzip the file _dpt2020_txt.zip_ (to get the **dpt2020.csv**). Read in R with this code. Note that you might need to install the `readr` package with the appropriate command.
 
 ```{r}
 library(tidyverse)
 library(corrplot)
+library(DoE.wrapper)
 ```
 
 
@@ -245,7 +239,6 @@ plot(reg_merged, 4)
 ```
 We see can from the cook's distance plot that there are a lot of outliers in the data which will result in a higher variance which makes it harder to fit a good model. We can also see from the residuals plot that the higher the execution time the higher the error which mostly happens when we have bigger sizes and this is were there are big differences between results depending on the type of the algorithm.
 
-
 ```{r}
 size_pred <- seq(100,1000000,by=5000)
 type_pred <- rep(c(1), length(size_pred))
@@ -272,5 +265,39 @@ The model however does not really fit well the data for the parallel data points
 
 
 ## Using new experiment results 
+
+Here I design a new experiment that addresses the flaws of the previous experiment. The improvements of this new experiment are:
+
+- Random order of experiments between the different types
+- Random order of array sizes in when testing
+- Cover the whole space of values between 100 to 1000000
+- Increase the number of tests done
+
+To do that we will use an lhs design to generate different sizes between 100 and 1000000, since this design is best for covering a space as much as possible while not having a fixed spacing between the values, I created the script `scripts/gen_experiments.R` that generates these experiment and this the resulting dataset:
+
+
+```{r}
+experiment <- read.csv(file="data/experiments/qs_experiment.csv")
+experiment
+```
+
+Check that we have same number of experiments for each type
+
+```{r}
+experiment %>% group_by(Type) %>% count()
+```
+
+To see this randomization better we do this plot:
+
+```{r}
+experiment$order =  as.numeric(rownames(experiment))
+```
+
+```{r}
+ggplot() +               
+  geom_point(data = experiment, aes(x=Size, y=order, color = Type))
+```
+We can see that the Size space is well covered and randomized, and the order between the tests order is also well randomized.
+
 
 
