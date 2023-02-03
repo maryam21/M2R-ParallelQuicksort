@@ -695,7 +695,7 @@ experiment$Type[experiment$Type == 2] &lt;- &quot;Built-in&quot;</code></pre>
 </div>
 <div id="new-experiment-analysis" class="section level2">
 <h2>New experiment analysis</h2>
-<p>To run the generated experiments I use the script <code>scripts/run_experiments.sh</code> that puts the results of the experiments in a csv file.</p>
+<p>I first updated the code for <code>src/parallelQuicksort.c</code> so that we can run the different types of algorithms separately and then to run the generated experiments I use the script <code>scripts/run_experiments.sh</code> that puts the results of the experiments in a csv file.</p>
 <p>So let’s analyse the results in this file:</p>
 <pre class="r"><code>experiment_results &lt;- read.csv(file=&quot;data/debian_2023-02-03/measurements_16:24.csv&quot;)
 experiment_results</code></pre>

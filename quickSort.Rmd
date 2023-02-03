@@ -329,7 +329,7 @@ I found that having 1000 for each type gives the best coverage of the size space
 
 ## New experiment analysis
 
-To run the generated experiments I use the script `scripts/run_experiments.sh` that puts the results of the experiments in a csv file.
+I first updated the code for `src/parallelQuicksort.c` so that we can run the different types of algorithms separately and then to run the generated experiments I use the script `scripts/run_experiments.sh` that puts the results of the experiments in a csv file.
 
 So let's analyse the results in this file:
 
