@@ -92,7 +92,7 @@ int main(int argc, char *argv[])
       //Compute time difference.
       diff = ((end.tv_sec * 1000000 + end.tv_usec)
               - (start.tv_sec * 1000000 + start.tv_usec)) / 1000000.0;
-      printf("%d,%d,%lf\n", NUM,TYPE,diff);
+      printf("%d,Sequential,%lf\n", NUM,diff);
 
   }else if(TYPE==1){
     //Now, parallel quicksort.
@@ -110,7 +110,7 @@ int main(int argc, char *argv[])
     //Compute time difference.
     diff = ((end.tv_sec * 1000000 + end.tv_usec)
             - (start.tv_sec * 1000000 + start.tv_usec)) / 1000000.0;
-    printf("%d,%d,%lf\n", NUM,TYPE,diff);
+    printf("%d,Parallel,%lf\n", NUM,diff);
 
   }else if(TYPE==2){
     //Finally, built-in for reference:
@@ -125,7 +125,7 @@ int main(int argc, char *argv[])
     //Compute time difference.
     diff = ((end.tv_sec * 1000000 + end.tv_usec)
             - (start.tv_sec * 1000000 + start.tv_usec)) / 1000000.0;
-    printf("%d,%d,%lf\n", NUM,TYPE,diff);
+    printf("%d,Built-in,%lf\n", NUM,diff);
   }
 
   free(lyst);
